@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spanviz"
+version = "0.1"
+authors = [{name="Matthijs Westera", email="m.westera@hum.leidenuniv.nl"}]
+description = "Vizualising potentially discontinuous, potentially overlapping (and crossing) spans"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+spanviz = "spanviz.main:main"
+
+[project.urls]
+"Homepage" = "https://github.com/mwestera/spanviz"
+"Bug Tracker" = "https://github.com/mwestera/spanviz/issues"
+
