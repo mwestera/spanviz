@@ -58,6 +58,7 @@ def update_colormap(colormap: dict, spans: list[dict]):
 
 def spans_to_html(text: str, spans: list[dict], colormap={}):  # :)
     spans = list(standardize_spans(spans))
+
     update_colormap(colormap, spans)
 
     starts_and_ends = {0, len(text)}
@@ -80,28 +81,30 @@ def spans_to_html(text: str, spans: list[dict], colormap={}):  # :)
         blended_color = colorblend(*colors_for_span)
         hovertext = ','.join(labels_for_span)
 
-        snippets.append(f'<mark style="background-color:{blended_color}" title="{hovertext}";>{text[start:end]}</mark>')
+        snippets.append(f'<mark style="background-color:{blended_color}AA" title="{hovertext}";>{text[start:end]}</mark>')
 
     return ''.join(snippets)
 
 
 def standardize_spans(spans):
-    # TODO Make more flexible; and do input validation
+    # TODO Refactor; and do proper input validation
     # spans can be {start:, end:, label/tag:} or [1,2,label]
     # if args.multi: {subspans: [{start:, end:,}, {start: end:}], label/tag:}  or [[1,2],[3,4],label]
 
-    for n, span in enumerate(spans):
+    spans_sorted_by_start = sorted(spans, key=lambda x: x['start'] if 'start' in x else min((y['start'] for y in (x['subspans'] if 'subspans' in x else x)), default=-1))
+
+    for n, span in enumerate(spans_sorted_by_start):
         if 'start' in span:
-            span.setdefault('label', str(n))
+            span['label'] = str(span.get('label', n))
             yield span
         else:
             if isinstance(span, dict):
-                label = span.get('label', str(n))
+                label = str(span.get('label', n))
                 for subspan in span['subspans']:
-                    yield {'label': subspan.get('label', label), **subspan}
+                    yield {'label': str(subspan.get('label', label)), **subspan}
             else:
                 for subspan in span:
-                    yield {'label': subspan.get('label', n), **subspan}
+                    yield {'label': str(subspan.get('label', n)), **subspan}
 
 
 
