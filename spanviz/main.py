@@ -29,7 +29,6 @@ def main():
     argparser.add_argument('jsonl', nargs='?', type=argparse.FileType('r'), default=sys.stdin, help="jsonl file with text and spans to render (default: stdin)")
     argparser.add_argument('--text', nargs='?', type=str, help="which key in each json record contains the text", default='text')
     argparser.add_argument('--spans', nargs='?', type=str, help="which key contains the spans, in start,end,label format", default='spans')
-    argparser.add_argument('--multi', required=False, action='store_true',help="whether they are discontinuous/multispans")
     argparser.add_argument('--serve', required=False, action='store_true', help="whether to serve the html in a browser")
 
     args = argparser.parse_args()
@@ -38,10 +37,8 @@ def main():
 
     for line in args.jsonl:
         d = json.loads(line)
-        text = d[args.text]
-        spans = list(standardize_spans(d[args.spans], args.multi))
 
-        html = spans_to_html(text, spans)
+        html = spans_to_html(d[args.text], d[args.spans])
 
         print(f"<p>{html}</p>", file=outfile)
 
@@ -60,6 +57,7 @@ def update_colormap(colormap: dict, spans: list[dict]):
 
 
 def spans_to_html(text: str, spans: list[dict], colormap={}):  # :)
+    spans = list(standardize_spans(spans))
     update_colormap(colormap, spans)
 
     starts_and_ends = {0, len(text)}
@@ -87,17 +85,23 @@ def spans_to_html(text: str, spans: list[dict], colormap={}):  # :)
     return ''.join(snippets)
 
 
-def standardize_spans(s, multi):
+def standardize_spans(spans):
     # TODO Make more flexible; and do input validation
     # spans can be {start:, end:, label/tag:} or [1,2,label]
     # if args.multi: {subspans: [{start:, end:,}, {start: end:}], label/tag:}  or [[1,2],[3,4],label]
 
-    for span in s:
-        if multi:
-            for subspan in span['subspans']:
-                yield {'label': span['label'], **subspan}
-        else:
+    for n, span in enumerate(spans):
+        if 'start' in span:
+            span.setdefault('label', str(n))
             yield span
+        else:
+            if isinstance(span, dict):
+                label = span.get('label', str(n))
+                for subspan in span['subspans']:
+                    yield {'label': subspan.get('label', label), **subspan}
+            else:
+                for subspan in span:
+                    yield {'label': subspan.get('label', n), **subspan}
 
 
 
