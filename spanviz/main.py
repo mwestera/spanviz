@@ -57,6 +57,7 @@ def update_colormap(colormap: dict, spans: list[dict]):
 
 
 def spans_to_html(text: str, spans: list[dict], colormap={}):  # :)
+
     spans = list(standardize_spans(spans))
 
     update_colormap(colormap, spans)
@@ -91,9 +92,7 @@ def standardize_spans(spans):
     # spans can be {start:, end:, label/tag:} or [1,2,label]
     # if args.multi: {subspans: [{start:, end:,}, {start: end:}], label/tag:}  or [[1,2],[3,4],label]
 
-    spans_sorted_by_start = sorted(spans, key=lambda x: x['start'] if 'start' in x else min((y['start'] for y in (x['subspans'] if 'subspans' in x else x)), default=-1))
-
-    for n, span in enumerate(spans_sorted_by_start):
+    for n, span in enumerate(spans):
         if 'start' in span:
             span['label'] = str(span.get('label', n))
             yield span
