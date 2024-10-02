@@ -6,6 +6,7 @@ import logging
 import math
 import tempfile
 import webbrowser
+import itertools
 
 
 colors = {  # matplotlib's tab10 palette
@@ -29,6 +30,8 @@ def main():
     argparser.add_argument('--text', nargs='?', type=str, help="which key in each json record contains the text", default='text')
     argparser.add_argument('--spans', nargs='?', type=str, help="which key contains the spans, in start,end,label format", default='spans')
     argparser.add_argument('--serve', required=False, action='store_true', help="whether to serve the html in a browser")
+    argparser.add_argument('--rainbow', required=False, action='store_true', help="to alternate colors in overlapping spans, as opposed to blending colors")
+
 
     args = argparser.parse_args()
 
@@ -37,7 +40,7 @@ def main():
     for line in args.jsonl:
         d = json.loads(line)
 
-        html = spans_to_html(d[args.text], d[args.spans])
+        html = spans_to_html(d[args.text], d[args.spans], rainbow=args.rainbow)
 
         print(f"<p>{html}</p>", file=outfile)
 
@@ -55,7 +58,7 @@ def update_colormap(colormap: dict, spans: list[dict]):
             logging.warning('Not enough colors available.')
 
 
-def spans_to_html(text: str, spans: list[dict], colormap={}):  # :)
+def spans_to_html(text: str, spans: list[dict], colormap={}, rainbow=False):  # :)
 
     spans = list(standardize_spans(spans))
 
@@ -78,10 +81,16 @@ def spans_to_html(text: str, spans: list[dict], colormap={}):  # :)
             continue
 
         colors_for_span = [colormap[label] for label in labels_for_span]
-        blended_color = colorblend(*colors_for_span)
         hovertext = ','.join(labels_for_span)
 
-        snippets.append(f'<mark style="background-color:{blended_color}AA" title="{hovertext}";>{text[start:end]}</mark>')
+        if not rainbow:
+            blended_color = colorblend(*colors_for_span)
+            snippets.append(f'<mark style="background-color:{blended_color}66" title="{hovertext}";>{text[start:end]}</mark>')
+        else:
+            rainbow_chars = [f'<mark style="background-color:{color}66" title="{hovertext}";>{c}</mark>' for c, color in zip(text[start:end],
+                                                                                                             itertools.cycle(colors_for_span))]
+            snippets.append(''.join(rainbow_chars))
+
 
     return ''.join(snippets)
 
