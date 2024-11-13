@@ -55,7 +55,7 @@ def update_colormap(colormap: dict, spans: list[dict]):
         if not lab in colormap:
             colormap[lab] = list(colors.values())[len(colormap) % len(colors)]
         if len(colormap) > len(colors):
-            logging.warning('Not enough colors available.')
+            logging.debug('Not enough colors available.')
 
 
 def spans_to_html(text: str, spans: list[dict], colormap={}, rainbow=False):  # :)
