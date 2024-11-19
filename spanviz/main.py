@@ -58,7 +58,15 @@ def update_colormap(colormap: dict, spans: list[dict]):
             logging.debug('Not enough colors available.')
 
 
-def spans_to_html(text: str, spans: list[dict], colormap={}, rainbow=False):  # :)
+def spans_to_html(text: str, spans: list[dict], rainbow=False):
+    return render_spans(text=text, spans=spans, rainbow=rainbow)
+
+
+def spans_to_md(text: str, spans: list[dict], with_labels=True):
+    return render_spans(text=text, spans=spans, colormap={}, with_labels=with_labels, to_markdown=True)
+
+
+def render_spans(text: str, spans: list[dict], colormap={}, rainbow=False, to_markdown=False, with_labels=True):
 
     spans = list(standardize_spans(spans))
 
@@ -83,13 +91,18 @@ def spans_to_html(text: str, spans: list[dict], colormap={}, rainbow=False):  # 
         colors_for_span = [colormap[label] for label in labels_for_span]
         hovertext = ','.join(labels_for_span)
 
-        if not rainbow:
-            blended_color = colorblend(*colors_for_span)
-            snippets.append(f'<mark style="background-color:{blended_color}66" title="{hovertext}";>{text[start:end]}</mark>')
+        if to_markdown:
+            label_str = '_' + hovertext if with_labels else ''
+            snippets.append(f'\****{text[start:end]}{label_str}***\*')
         else:
-            rainbow_chars = [f'<mark style="background-color:{color}66" title="{hovertext}";>{c}</mark>' for c, color in zip(text[start:end],
-                                                                                                             itertools.cycle(colors_for_span))]
-            snippets.append(''.join(rainbow_chars))
+            tooltip = f' title="{hovertext}"' if with_labels else ''
+            if not rainbow:
+                blended_color = colorblend(*colors_for_span)
+                snippets.append(f'<mark style="background-color:{blended_color}66"{tooltip};>{text[start:end]}</mark>')
+            else:
+                rainbow_chars = [f'<mark style="background-color:{color}66"{tooltip}";>{c}</mark>' for c, color in zip(text[start:end],
+                                                                                                                 itertools.cycle(colors_for_span))]
+                snippets.append(''.join(rainbow_chars))
 
 
     return ''.join(snippets)
