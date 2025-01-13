@@ -8,6 +8,9 @@ import tempfile
 import webbrowser
 import itertools
 
+import os         # maybe for colors cross-platform?
+os.system('color')
+
 
 colors = {  # matplotlib's tab10 palette
     'blue': '#1f77b4',
@@ -93,7 +96,8 @@ def render_spans(text: str, spans: list[dict], colormap={}, rainbow=False, to_ma
 
         if to_markdown:
             label_str = '_' + hovertext if with_labels else ''
-            snippets.append(f'\****{text[start:end]}{label_str}***\*')
+            # snippets.append(f'\****{text[start:end]}{label_str}***\*')
+            snippets.append(f'\x1b[5;43;36m{text[start:end]}{label_str}\x1b[0m')  # for color in terminal
         else:
             tooltip = f' title="{hovertext}"' if with_labels else ''
             if not rainbow:
